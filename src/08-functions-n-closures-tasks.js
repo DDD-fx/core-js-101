@@ -90,8 +90,11 @@ function getPolynom(...args) {
  *   ...
  *   memoizer() => the same random number  (next run, returns the previous cached result)
  */
-function memoize(/* func */) {
-  throw new Error('Not implemented');
+function memoize(func) {
+  const cache = [func()];
+  return function x() {
+    return cache[0];
+  };
 }
 
 
@@ -110,16 +113,19 @@ function memoize(/* func */) {
  * }, 2);
  * retryer() => 2
  */
-function retry(/* func, attempts */) {
-  throw new Error('Not implemented');
-  /* let attempt = attempts;
-  return function a() {
-    if ((attempt + 1) % 2) {
-      attempt += 1;
-      throw new Error('test');
+function retry(func, attempts) {
+  let attemptsCount = 0;
+  return function x() {
+    while (attemptsCount < attempts) {
+      try {
+        attemptsCount += 1;
+        func();
+      } catch (err) {
+        [].push(err);
+      }
     }
-    return attempt;
-  }; */
+    return func();
+  };
 }
 
 
@@ -146,8 +152,15 @@ function retry(/* func, attempts */) {
  * cos(3.141592653589793) ends
  *
  */
-function logger(/* func, logFunc */) {
-  throw new Error('Not implemented');
+function logger(func, logFunc) {
+  const method = func.name;
+
+  return function x(...args) {
+    logFunc(`${method}(${JSON.stringify(args).slice(1, -1)}) starts`);
+    const result = func(...args);
+    logFunc(`${method}(${JSON.stringify(args).slice(1, -1)}) ends`);
+    return result || JSON.stringify(args).slice(1, -1);
+  };
 }
 
 
