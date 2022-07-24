@@ -117,33 +117,115 @@ function fromJSON(proto, json) {
  *  For more examples see unit tests.
  */
 
+
+class SelectorBuilder {
+  constructor() {
+    this.selector = '';
+    this.elemCounter = 0;
+    this.idCounter = 0;
+    this.classCounter = 0;
+    this.attrCounter = 0;
+    this.pseudoElemCounter = 0;
+    this.pseudoClassCounter = 0;
+  }
+
+  element(value) {
+    if (this.elemCounter > 0) throw new Error('Element, id and pseudo-element should not occur more then one time inside the selector');
+    if (this.idCounter > 0 || this.classCounter > 0 || this.attrCounter > 0
+      || this.pseudoElemCounter > 0 || this.pseudoClassCounter > 0) {
+      throw new Error('Selector parts should be arranged in the following order: element, id, class, attribute, pseudo-class, pseudo-element');
+    }
+    this.elemCounter += 1;
+    this.selector += value;
+    return this;
+  }
+
+  id(value) {
+    if (this.idCounter > 0) throw new Error('Element, id and pseudo-element should not occur more then one time inside the selector');
+    if (this.classCounter > 0 || this.attrCounter > 0
+      || this.pseudoClassCounter > 0 || this.pseudoElemCounter > 0) {
+      throw new Error('Selector parts should be arranged in the following order: element, id, class, attribute, pseudo-class, pseudo-element');
+    }
+    this.idCounter += 1;
+    this.selector += `#${value}`;
+    return this;
+  }
+
+  class(value) {
+    if (this.attrCounter > 0 || this.pseudoClassCounter > 0 || this.pseudoElemCounter > 0) {
+      throw new Error('Selector parts should be arranged in the following order: element, id, class, attribute, pseudo-class, pseudo-element');
+    }
+    this.classCounter += 1;
+    this.selector += `.${value}`;
+    return this;
+  }
+
+  attr(value) {
+    if (this.pseudoClassCounter > 0 || this.pseudoElemCounter > 0) {
+      throw new Error('Selector parts should be arranged in the following order: element, id, class, attribute, pseudo-class, pseudo-element');
+    }
+    this.attrCounter += 1;
+    this.selector += `[${value}]`;
+    return this;
+  }
+
+  pseudoClass(value) {
+    if (this.pseudoElemCounter > 0) {
+      throw new Error('Selector parts should be arranged in the following order: element, id, class, attribute, pseudo-class, pseudo-element');
+    }
+    this.pseudoClassCounter += 1;
+    this.selector += `:${value}`;
+    return this;
+  }
+
+  pseudoElement(value) {
+    if (this.pseudoElemCounter > 0) {
+      throw new Error('Element, id and pseudo-element should not occur more then one time inside the selector');
+    }
+    if (this.elemCounter >= 0 || this.idCounter >= 0) {
+      this.pseudoElemCounter += 1;
+      this.selector += `::${value}`;
+      return this;
+    }
+    throw new Error('Selector parts should be arranged in the following order: element, id, class, attribute, pseudo-class, pseudo-element');
+  }
+
+  stringify() {
+    return this.selector;
+  }
+
+  combine(selector1, combinator, selector2) {
+    this.selector = `${selector1.selector} ${combinator} ${selector2.selector}`;
+    return this;
+  }
+}
 const cssSelectorBuilder = {
-  element(/* value */) {
-    throw new Error('Not implemented');
+  element(value) {
+    return new SelectorBuilder().element(value);
   },
 
-  id(/* value */) {
-    throw new Error('Not implemented');
+  id(value) {
+    return new SelectorBuilder().id(value);
   },
 
-  class(/* value */) {
-    throw new Error('Not implemented');
+  class(value) {
+    return new SelectorBuilder().class(value);
   },
 
-  attr(/* value */) {
-    throw new Error('Not implemented');
+  attr(value) {
+    return new SelectorBuilder().attr(value);
   },
 
-  pseudoClass(/* value */) {
-    throw new Error('Not implemented');
+  pseudoClass(value) {
+    return new SelectorBuilder().pseudoClass(value);
   },
 
-  pseudoElement(/* value */) {
-    throw new Error('Not implemented');
+  pseudoElement(value) {
+    return new SelectorBuilder().pseudoElement(value);
   },
 
-  combine(/* selector1, combinator, selector2 */) {
-    throw new Error('Not implemented');
+  combine(selector1, combinator, selector2) {
+    return new SelectorBuilder().combine(selector1, combinator, selector2);
   },
 };
 
